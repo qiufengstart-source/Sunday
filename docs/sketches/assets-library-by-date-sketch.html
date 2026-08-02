@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>草图对比 · 素材库按日期分区 A / B</title>
+  <style>
+    :root {
+      --line: #9aa3b2;
+      --ink: #1f2937;
+      --mute: #6b7280;
+      --soft: #f3f4f6;
+      --paper: #fafafa;
+      --accent: #2563eb;
+      --panel: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Hiragino Sans GB", sans-serif;
+      color: var(--ink);
+      background: #e8ecf1;
+      padding: 28px 24px 64px;
+    }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    .lead { color: var(--mute); font-size: 13px; margin: 0 0 18px; max-width: 960px; line-height: 1.55; }
+    .toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .toc a {
+      text-decoration: none; font-size: 12px; padding: 6px 12px; border-radius: 999px;
+      border: 1px solid #cbd5e1; background: #fff; color: var(--ink);
+    }
+    .toc a:hover { border-color: #93c5fd; color: var(--accent); }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 1180px) { .grid-2 { grid-template-columns: 1fr; } }
+    .card {
+      background: #fff;
+      border: 1px solid #d7dde7;
+      border-radius: 12px;
+      padding: 14px;
+      scroll-margin-top: 16px;
+    }
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+    }
+    .tag {
+      font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+      border: 1px solid #d1d5db; color: var(--mute); background: var(--soft);
+    }
+    .tag.rec { color: #1d4ed8; background: #eff6ff; border-color: #93c5fd; }
+    .tag.alt { color: #065f46; background: #ecfdf5; border-color: #6ee7b7; }
+    .note { font-size: 12px; color: var(--mute); line-height: 1.5; margin: 0 0 12px; }
+    .frame {
+      border: 1.5px dashed var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--paper);
+      min-height: 520px;
+    }
+    .shell { display: grid; grid-template-columns: 64px 1fr; min-height: 520px; }
+    .rail {
+      background: #f8fafc;
+      border-right: 1px solid #e5e7eb;
+      padding: 10px 6px;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+    .rail .dot {
+      width: 100%; aspect-ratio: 1; border-radius: 8px; background: #e5e7eb;
+      display: grid; place-items: center; font-size: 9px; color: var(--mute);
+    }
+    .rail .dot.on { background: #dbeafe; color: var(--accent); font-weight: 700; }
+    .main { display: grid; grid-template-rows: auto 1fr; min-width: 0; }
+    .head {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 10px 12px; border-bottom: 1px solid #e5e7eb; background: #fff;
+    }
+    .head h3 { margin: 0; font-size: 14px; }
+    .chip {
+      font-size: 11px; padding: 2px 8px; border-radius: 999px;
+      background: #f1f5f9; color: var(--mute); border: 1px solid #e2e8f0;
+    }
+    .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+    .filters span {
+      font-size: 11px; padding: 4px 8px; border-radius: 6px;
+      border: 1px dashed #cbd5e1; color: var(--mute); background: #fff;
+    }
+    .body { padding: 12px; overflow: auto; max-height: 460px; background: #f8fafc; }
+
+    /* ===== Version A: sticky date bands + media grid ===== */
+    .day-block { margin-bottom: 16px; }
+    .day-sticky {
+      position: sticky; top: 0; z-index: 2;
+      display: flex; align-items: baseline; gap: 10px;
+      padding: 8px 4px 10px;
+      background: linear-gradient(#f8fafc 70%, rgba(248,250,252,0));
+    }
+    .day-sticky strong { font-size: 14px; }
+    .day-sticky em { font-style: normal; font-size: 11px; color: var(--mute); }
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .media-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .thumb {
+      aspect-ratio: 3/4;
+      background:
+        linear-gradient(135deg, #dbeafe 0%, #fce7f3 50%, #fef3c7 100%);
+      position: relative;
+    }
+    .thumb .badge {
+      position: absolute; left: 6px; top: 6px;
+      font-size: 10px; padding: 2px 6px; border-radius: 999px;
+      background: rgba(15,23,42,.72); color: #fff;
+    }
+    .meta {
+      padding: 8px;
+      display: grid; gap: 3px;
+      font-size: 11px; color: var(--mute); line-height: 1.35;
+    }
+    .meta .title {
+      color: var(--ink); font-weight: 600; font-size: 12px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .meta .row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pill {
+      font-size: 10px; padding: 1px 6px; border-radius: 999px;
+      background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
+    }
+    .pill.soft { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
+
+    /* ===== Version B: left date index + right dense rows ===== */
+    .split-b {
+      display: grid;
+      grid-template-columns: 132px 1fr;
+      min-height: 460px;
+    }
+    .date-rail {
+      border-right: 1px solid #e5e7eb;
+      background: #fff;
+      padding: 10px 8px;
+      display: grid;
+      gap: 6px;
+      align-content: start;
+    }
+    .date-rail .label {
+      font-size: 10px; color: var(--mute); padding: 0 6px 4px; text-transform: uppercase;
+    }
+    .date-item {
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 8px;
+      background: #f8fafc;
+      cursor: default;
+    }
+    .date-item.on {
+      background: #eff6ff;
+      border-color: #93c5fd;
+    }
+    .date-item strong { display: block; font-size: 12px; }
+    .date-item span { font-size: 10px; color: var(--mute); }
+    .list-b { padding: 12px; display: grid; gap: 14px; background: #f8fafc; }
+    .day-title {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 8px;
+    }
+    .day-title strong { font-size: 13px; }
+    .day-title span { font-size: 11px; color: var(--mute); }
+    .row-card {
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 8px;
+    }
+    .row-card .thumb {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .row-card .info { min-width: 0; display: grid; gap: 3px; }
+    .row-card .info .title {
+      font-size: 12px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .row-card .info .sub {
+      font-size: 11px; color: var(--mute);
+      display: flex; flex-wrap: wrap; gap: 6px 10px;
+    }
+    .row-card .ops {
+      display: grid; gap: 4px;
+    }
+    .row-card .ops span {
+      font-size: 10px; text-align: center; padding: 4px 8px;
+      border: 1px dashed #cbd5e1; border-radius: 6px; color: var(--mute);
+    }
+    .legend {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--mute);
+      line-height: 1.55;
+      padding: 10px 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .legend strong { color: var(--ink); }
+    .choose {
+      margin-top: 18px;
+      padding: 14px 16px;
+      background: #fff;
+      border: 1px solid #d7dde7;
+      border-radius: 12px;
+    }
+    .choose h2 { margin: 0 0 8px; font-size: 15px; }
+    .choose ol { margin: 0; padding-left: 18px; color: var(--mute); font-size: 13px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <h1>素材库改版草图 · 按日期分区</h1>
+  <p class="lead">
+    目标：同一店铺项目下的素材，按<strong>保存/生成日期</strong>分区展示；每条素材可见
+    <strong>缩略图、时间、生图类型、任务名称、生图人</strong>等。以下两版交互不同，请选其一落地。
+  </p>
+  <div class="toc">
+    <a href="#ver-a">A · 日期粘性分组 + 图片网格</a>
+    <a href="#ver-b">B · 左侧日期索引 + 信息行列表</a>
+    <a href="#choose">如何选择</a>
+  </div>
+
+  <div class="grid-2">
+    <!-- ========== A ========== -->
+    <section class="card" id="ver-a">
+      <h2>方案 A <span class="tag rec">推荐 · 浏览优先</span></h2>
+      <p class="note">
+        像相册「按日分组」：日期条吸顶，下方多列缩略图。适合快速扫图、按天回看「今天出了哪些图」。
+        元信息压在卡片底部，不抢画面。
+      </p>
+      <div class="frame">
+        <div class="shell">
+          <aside class="rail">
+            <div class="dot">生图</div>
+            <div class="dot">项目</div>
+            <div class="dot">提示词</div>
+            <div class="dot on">素材库</div>
+          </aside>
+          <div class="main">
+            <div class="head">
+              <h3>项目素材库</h3>
+              <span class="chip">北美香氛店</span>
+              <div class="filters">
+                <span>全部类型</span>
+                <span>仅我创建</span>
+                <span>搜索任务…</span>
+              </div>
+            </div>
+            <div class="body">
+              <div class="day-block">
+                <div class="day-sticky">
+                  <strong>今天 · 2026-08-02</strong>
+                  <em>4 张</em>
+                </div>
+                <div class="media-grid">
+                  <div class="media-card">
+                    <div class="thumb"><span class="badge">商品图加工</span></div>
+                    <div class="meta">
+                      <div class="title">香氛瓶 · 咖啡馆场景</div>
+                      <div class="row"><span class="pill soft">11:58</span><span class="pill soft">Cecilia</span></div>
+                      <div class="row">任务：香氛主图优化</div>
+                    </div>
+                  </div>
+                  <div class="media-card">
+                    <div class="thumb" style="background:linear-gradient(160deg,#e2e8f0,#bfdbfe)"><span class="badge">商品图加工</span></div>
+                    <div class="meta">
+                      <div class="title">香氛瓶 · 白底主图</div>
+                      <div class="row"><span class="pill soft">11:42</span><span class="pill soft">Cecilia</span></div>
+                      <div class="row">任务：香氛主图优化</div>
+                    </div>
+                  </div>
+                  <div class="media-card">
+                    <div class="thumb" style="background:linear-gradient(160deg,#fde68a,#fce7f3)"><span class="badge">创意生图</span></div>
+                    <div class="meta">
+                      <div class="title">系列氛围拼版试稿</div>
+                      <div class="row"><span class="pill soft">10:15</span><span class="pill soft">Cecilia</span></div>
+                      <div class="row">任务：节日活动氛围</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="day-block">
+                <div class="day-sticky">
+                  <strong>昨天 · 2026-08-01</strong>
+                  <em>2 张</em>
+                </div>
+                <div class="media-grid">
+                  <div class="media-card">
+                    <div class="thumb" style="background:linear-gradient(160deg,#bbf7d0,#dbeafe)"><span class="badge">商品图加工</span></div>
+                    <div class="meta">
+                      <div class="title">手提袋 · 街景</div>
+                      <div class="row"><span class="pill soft">16:20</span><span class="pill soft">Alex</span></div>
+                      <div class="row">任务：箱包上新</div>
+                    </div>
+                  </div>
+                  <div class="media-card">
+                    <div class="thumb" style="background:linear-gradient(160deg,#ddd6fe,#fae8ff)"><span class="badge">商品图加工</span></div>
+                    <div class="meta">
+                      <div class="title">手提袋 · 大理石台面</div>
+                      <div class="row"><span class="pill soft">15:03</span><span class="pill soft">Alex</span></div>
+                      <div class="row">任务：箱包上新</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <strong>结构：</strong>日期粘性标题（今天 / 昨天 / 具体日期 + 张数）→ 3 列图卡。<br />
+        <strong>卡片字段：</strong>缩略图、生图类型角标、素材标题、具体时刻、生图人、来源任务名。<br />
+        <strong>适合：</strong>图多、以「看图找图」为主；滚动时始终知道当前在哪一天。
+      </div>
+    </section>
+
+    <!-- ========== B ========== -->
+    <section class="card" id="ver-b">
+      <h2>方案 B <span class="tag alt">备选 · 信息优先</span></h2>
+      <p class="note">
+        左侧是可点击的日期目录（带当日数量），右侧是「小图 + 完整信息行」。
+        更像素材台账：查人、查任务、查类型更清晰，浏览密度低于 A。
+      </p>
+      <div class="frame">
+        <div class="shell">
+          <aside class="rail">
+            <div class="dot">生图</div>
+            <div class="dot">项目</div>
+            <div class="dot">提示词</div>
+            <div class="dot on">素材库</div>
+          </aside>
+          <div class="main">
+            <div class="head">
+              <h3>项目素材库</h3>
+              <span class="chip">北美香氛店</span>
+              <div class="filters">
+                <span>类型 ▾</span>
+                <span>生图人 ▾</span>
+                <span>按保存时间</span>
+              </div>
+            </div>
+            <div class="split-b">
+              <aside class="date-rail">
+                <div class="label">日期</div>
+                <div class="date-item on">
+                  <strong>08-02 今天</strong>
+                  <span>4 张素材</span>
+                </div>
+                <div class="date-item">
+                  <strong>08-01 昨天</strong>
+                  <span>2 张素材</span>
+                </div>
+                <div class="date-item">
+                  <strong>07-30</strong>
+                  <span>5 张素材</span>
+                </div>
+                <div class="date-item">
+                  <strong>07-28</strong>
+                  <span>1 张素材</span>
+                </div>
+              </aside>
+              <div class="list-b">
+                <div>
+                  <div class="day-title">
+                    <strong>2026-08-02（今天）</strong>
+                    <span>共 4 张 · 展示前 3 条示意</span>
+                  </div>
+                  <div style="display:grid;gap:8px">
+                    <div class="row-card">
+                      <div class="thumb"></div>
+                      <div class="info">
+                        <div class="title">香氛瓶 · 咖啡馆场景</div>
+                        <div class="sub">
+                          <span>时间 11:58</span>
+                          <span>类型 商品图加工</span>
+                          <span>任务 香氛主图优化</span>
+                          <span>生图人 Cecilia</span>
+                        </div>
+                      </div>
+                      <div class="ops">
+                        <span>预览</span>
+                        <span>来源任务</span>
+                        <span>下载</span>
+                      </div>
+                    </div>
+                    <div class="row-card">
+                      <div class="thumb" style="background:linear-gradient(160deg,#e2e8f0,#bfdbfe)"></div>
+                      <div class="info">
+                        <div class="title">香氛瓶 · 白底主图</div>
+                        <div class="sub">
+                          <span>时间 11:42</span>
+                          <span>类型 商品图加工</span>
+                          <span>任务 香氛主图优化</span>
+                          <span>生图人 Cecilia</span>
+                        </div>
+                      </div>
+                      <div class="ops">
+                        <span>预览</span>
+                        <span>来源任务</span>
+                        <span>下载</span>
+                      </div>
+                    </div>
+                    <div class="row-card">
+                      <div class="thumb" style="background:linear-gradient(160deg,#fde68a,#fce7f3)"></div>
+                      <div class="info">
+                        <div class="title">系列氛围拼版试稿</div>
+                        <div class="sub">
+                          <span>时间 10:15</span>
+                          <span>类型 创意生图</span>
+                          <span>任务 节日活动氛围</span>
+                          <span>生图人 Cecilia</span>
+                        </div>
+                      </div>
+                      <div class="ops">
+                        <span>预览</span>
+                        <span>来源任务</span>
+                        <span>下载</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <strong>结构：</strong>左日期索引（跳转/筛选当日）+ 右信息行列表。<br />
+        <strong>行字段：</strong>缩略图、标题、时间、生图类型、任务名称、生图人、操作（预览/来源任务/下载）。<br />
+        <strong>适合：</strong>要核对归属与任务链路；多人协作时查「谁在哪天出了什么」更清晰。
+      </div>
+    </section>
+  </div>
+
+  <section class="choose" id="choose">
+    <h2>如何选择</h2>
+    <ol>
+      <li><strong>选 A</strong>：日常以「看图挑素材」为主，日期分组一眼扫完即可。</li>
+      <li><strong>选 B</strong>：更在意时间 / 类型 / 任务 / 生图人台账，需要左侧按日跳转。</li>
+      <li>也可说「A 的视觉 + B 的筛选/字段」，我会按你的选择出正式设计说明再开发。</li>
+    </ol>
+    <p class="note" style="margin-top:10px;margin-bottom:0">
+      两版共用数据字段建议：<code>createdAt</code>（分区键）、<code>type</code>（商品图加工/创意生图）、
+      <code>taskTitle</code>、<code>createdBy</code>、<code>versionName</code>、缩略图与 HD 标记。
+    </p>
+  </section>
+</body>
+</html>
