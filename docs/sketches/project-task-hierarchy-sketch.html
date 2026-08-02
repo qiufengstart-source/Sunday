@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>草图对比 · 现状 / A / B / C</title>
+  <style>
+    :root {
+      --line: #9aa3b2;
+      --ink: #1f2937;
+      --mute: #6b7280;
+      --soft: #f3f4f6;
+      --paper: #fafafa;
+      --accent: #2563eb;
+      --warn: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Hiragino Sans GB", sans-serif;
+      color: var(--ink);
+      background: #e8ecf1;
+      padding: 28px 24px 56px;
+    }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    .lead { color: var(--mute); font-size: 13px; margin: 0 0 18px; max-width: 920px; line-height: 1.55; }
+    .toc {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px;
+    }
+    .toc a {
+      text-decoration: none;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      color: var(--ink);
+    }
+    .toc a:hover { border-color: #93c5fd; color: var(--accent); }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 1100px) { .grid-2 { grid-template-columns: 1fr; } }
+    .card {
+      background: #fff;
+      border: 1px solid #d7dde7;
+      border-radius: 12px;
+      padding: 14px;
+      scroll-margin-top: 16px;
+    }
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      color: var(--mute);
+      background: var(--soft);
+    }
+    .tag.now { color: #92400e; background: #fff7ed; border-color: #fdba74; }
+    .tag.rec { color: #1d4ed8; background: #eff6ff; border-color: #93c5fd; }
+    .tag.alt { color: #065f46; background: #ecfdf5; border-color: #6ee7b7; }
+    .frame {
+      border: 1.5px dashed var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--paper);
+    }
+    .topbar {
+      min-height: 40px;
+      border-bottom: 1px solid #d7dde7;
+      display: flex;
+      align-items: center;
+      padding: 6px 10px;
+      gap: 8px;
+      background: #fff;
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+    .topbar.two-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      padding: 8px 10px;
+    }
+    .top-row { display: flex; align-items: center; gap: 8px; }
+    .brand { font-weight: 700; }
+    .pill {
+      border: 1px solid #d1d5db;
+      border-radius: 999px;
+      padding: 3px 10px;
+      color: var(--mute);
+      background: #fff;
+      font-size: 11px;
+    }
+    .pill.big {
+      border: 1.5px solid var(--accent);
+      background: #eff6ff;
+      color: var(--ink);
+      font-weight: 600;
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    .body { display: grid; grid-template-columns: 200px 1.1fr 0.9fr; min-height: 340px; }
+    .rail {
+      border-right: 1px solid #d7dde7;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      min-height: 340px;
+    }
+    .chat, .canvas {
+      padding: 10px;
+      font-size: 11px;
+      color: var(--mute);
+    }
+    .chat { border-right: 1px solid #d7dde7; }
+    .box {
+      border: 1px dashed #c5ccd8;
+      border-radius: 8px;
+      background: #f8fafc;
+      color: #94a3b8;
+      display: grid;
+      place-items: center;
+      min-height: 64px;
+      margin-bottom: 8px;
+    }
+    .box.tall { min-height: 200px; }
+    .sec {
+      padding: 10px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .sec.grow { flex: 1; overflow: hidden; }
+    .sec.foot {
+      margin-top: auto;
+      border-bottom: 0;
+      border-top: 1px solid #e5e7eb;
+      display: grid;
+      gap: 6px;
+      background: #fcfcfd;
+    }
+    .kicker {
+      font-size: 10px;
+      color: var(--mute);
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    .proj {
+      border: 1.5px solid var(--accent);
+      background: #eff6ff;
+      border-radius: 8px;
+      padding: 8px;
+    }
+    .proj strong { display: block; font-size: 12px; margin-bottom: 2px; }
+    .proj small { color: var(--mute); font-size: 10px; }
+    .proj .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+    .proj-lite {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 2px 2px;
+      border: 0;
+      background: transparent;
+      border-radius: 0;
+    }
+    .proj-lite .folder {
+      width: 14px;
+      height: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 3px;
+      background: #f8fafc;
+      flex: 0 0 auto;
+    }
+    .proj-lite .name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+    .proj-lite .chev {
+      color: var(--mute);
+      font-size: 10px;
+      flex: 0 0 auto;
+    }
+    .proj-lite .manage {
+      margin-left: auto;
+      font-size: 10px;
+      color: var(--mute);
+      flex: 0 0 auto;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .proj-lite-wrap {
+      border-bottom: 1px solid #eef1f5;
+      padding-bottom: 8px;
+      margin-bottom: 2px;
+    }
+    .link { color: var(--accent); font-size: 10px; margin-top: 6px; }
+    .btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      border-radius: 7px;
+      padding: 7px 8px;
+      font-size: 11px;
+      border: 1px solid #93c5fd;
+      background: #2563eb;
+      color: #fff;
+      margin-top: 8px;
+    }
+    .btn.ghost {
+      background: #fff;
+      color: var(--accent);
+      border-color: #93c5fd;
+    }
+    .tabs { display: flex; gap: 4px; margin: 8px 0; }
+    .tab {
+      flex: 1;
+      text-align: center;
+      font-size: 10px;
+      padding: 4px 0;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+      color: var(--mute);
+    }
+    .tab.on { background: #f1f5f9; color: var(--ink); border-color: #cbd5e1; }
+    .task {
+      border: 1px solid #e5e7eb;
+      border-radius: 7px;
+      padding: 7px 8px;
+      margin-bottom: 6px;
+      font-size: 11px;
+      background: #fff;
+    }
+    .task.on { border-color: #93c5fd; background: #f8fbff; }
+    .task em { display: block; color: var(--mute); font-style: normal; font-size: 10px; margin-top: 2px; }
+    .foot-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--mute);
+      padding: 4px 2px;
+    }
+    .dot {
+      width: 14px; height: 14px; border-radius: 3px;
+      border: 1px solid #cbd5e1; background: #f8fafc;
+    }
+    .weak {
+      opacity: 0.55;
+      outline: 2px dashed #f59e0b;
+      outline-offset: 2px;
+      border-radius: 8px;
+    }
+    .strong-ring {
+      outline: 2px solid #2563eb;
+      outline-offset: 2px;
+      border-radius: 10px;
+    }
+    .callout {
+      margin-top: 12px;
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--mute);
+    }
+    .callout b { color: var(--ink); }
+    .anno {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--warn);
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 999px;
+      padding: 1px 7px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+    .anno.blue {
+      color: #1d4ed8;
+      background: #eff6ff;
+      border-color: #93c5fd;
+    }
+    /* Scheme C: project home */
+    .home {
+      min-height: 340px;
+      padding: 16px;
+      background: #fff;
+    }
+    .home h3 { margin: 0 0 4px; font-size: 16px; }
+    .home p { margin: 0 0 14px; font-size: 12px; color: var(--mute); }
+    .proj-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .proj-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px;
+      background: #f8fafc;
+      font-size: 12px;
+    }
+    .proj-card.on {
+      border-color: #93c5fd;
+      background: #eff6ff;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+    .proj-card strong { display: block; margin-bottom: 4px; }
+    .proj-card small { color: var(--mute); font-size: 10px; }
+    .arrow {
+      text-align: center;
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 600;
+      padding: 10px 0 4px;
+    }
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      background: #fff;
+      border: 1px solid #d7dde7;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .compare-table th, .compare-table td {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.45;
+    }
+    .compare-table th { background: #f8fafc; color: var(--mute); font-weight: 600; }
+    .compare-table tr:last-child td { border-bottom: 0; }
+  </style>
+</head>
+<body>
+  <h1>草图对比：现状 / 方案 A / B / C</h1>
+  <p class="lead">
+    目标层级：<b>店铺项目 → 任务记录</b>。下面四张都是线框草图，可直接对比项目放在哪里、任务怎么挂靠。
+  </p>
+  <nav class="toc">
+    <a href="#now">① 现状</a>
+    <a href="#a-heavy">② A 初稿（偏重）</a>
+    <a href="#a">③ A 轻量（采用）</a>
+    <a href="#b">④ 方案 B</a>
+    <a href="#c">⑤ 方案 C</a>
+    <a href="#table">⑥ 对照表</a>
+  </nav>
+
+  <section class="card" id="a" style="margin-bottom:18px;border-color:#93c5fd;box-shadow:0 0 0 1px rgba(37,99,235,.08)">
+    <h2>采用稿：方案 A · 轻量项目行 <span class="tag rec">确认方向</span></h2>
+    <div class="frame">
+      <div class="topbar">
+        <span class="brand">商品素材工作台</span>
+        <span style="margin-left:auto" class="pill">运营 · 张敏</span>
+      </div>
+      <div class="body">
+        <aside class="rail">
+          <div class="sec" style="padding-bottom:8px">
+            <div class="proj-lite-wrap">
+              <div class="kicker" style="margin-bottom:4px">当前店铺</div>
+              <div class="proj-lite">
+                <span class="folder" aria-hidden="true"></span>
+                <span class="name">Nordic Home 旗舰店</span>
+                <span class="chev">▾</span>
+                <span class="manage">管理</span>
+              </div>
+            </div>
+            <div class="kicker" style="margin-top:10px">本项目任务</div>
+            <button class="btn" type="button">＋ 新建对话任务</button>
+            <div class="tabs">
+              <div class="tab on">全部</div>
+              <div class="tab">图生图</div>
+              <div class="tab">文生图</div>
+            </div>
+          </div>
+          <div class="sec grow" style="border-bottom:0;padding-top:0">
+            <div class="task on">白底主图优化<em>进行中 · 图生图</em></div>
+            <div class="task">场景图 · 客厅<em>已完成</em></div>
+            <div class="task">社媒种草图<em>草稿</em></div>
+          </div>
+          <div class="sec foot">
+            <div class="foot-item"><span class="dot"></span>提示词管理</div>
+            <div class="foot-item"><span class="dot"></span>素材库</div>
+          </div>
+        </aside>
+        <div class="chat">
+          <div class="kicker">对话生图（不变）</div>
+          <div class="box">对话流</div>
+          <div class="box">输入框</div>
+        </div>
+        <div class="canvas">
+          <div class="kicker">预览画布（不变）</div>
+          <div class="box tall">生成结果</div>
+        </div>
+      </div>
+    </div>
+    <p class="callout" style="margin-bottom:0">
+      <b>相对初稿 A 的减重：</b>去掉蓝底大卡片、平台备注、任务数统计；改成单行「当前店铺 · 名称 ▾ · 管理」。
+      层级仍是项目在上、任务在下，但视觉主角回到「本项目任务」。
+    </p>
+  </section>
+
+  <div class="grid-2">
+    <!-- 现状 -->
+    <section class="card" id="now">
+      <h2>① 现状 <span class="tag now">现在线上</span></h2>
+      <div class="frame">
+        <div class="topbar">
+          <span class="brand">商品素材工作台</span>
+          <span class="pill weak">项目：Nordic Home ▾ <span class="anno">弱</span></span>
+          <span style="margin-left:auto" class="pill">运营 · 张敏</span>
+        </div>
+        <div class="body">
+          <aside class="rail">
+            <div class="sec">
+              <div class="kicker">任务记录 <span class="anno">主视觉</span></div>
+              <button class="btn" type="button">＋ 新建对话任务</button>
+              <div class="tabs">
+                <div class="tab on">全部</div>
+                <div class="tab">图生图</div>
+                <div class="tab">文生图</div>
+              </div>
+            </div>
+            <div class="sec grow">
+              <div class="task on">白底主图优化<em>进行中 · 图生图</em></div>
+              <div class="task">场景图 · 客厅<em>已完成</em></div>
+              <div class="task">社媒种草图<em>草稿</em></div>
+            </div>
+            <div class="sec foot">
+              <div class="foot-item weak"><span class="dot"></span>店铺项目 <span class="anno">同级弱入口</span></div>
+              <div class="foot-item"><span class="dot"></span>提示词管理</div>
+              <div class="foot-item"><span class="dot"></span>素材库</div>
+            </div>
+          </aside>
+          <div class="chat">
+            <div class="kicker">对话生图</div>
+            <div class="box">对话流</div>
+            <div class="box">输入框</div>
+          </div>
+          <div class="canvas">
+            <div class="kicker">预览画布</div>
+            <div class="box tall">生成结果</div>
+          </div>
+        </div>
+      </div>
+      <p class="callout"><b>问题：</b>任务占左栏主视觉；项目只是顶栏小下拉 + 左下脚入口，容器感弱。</p>
+    </section>
+
+    <!-- A heavy (rejected weight) -->
+    <section class="card" id="a-heavy">
+      <h2>② A 初稿 <span class="tag now">量感偏重 · 不用</span></h2>
+      <div class="frame">
+        <div class="topbar">
+          <span class="brand">商品素材工作台</span>
+          <span style="margin-left:auto" class="pill">运营 · 张敏</span>
+        </div>
+        <div class="body">
+          <aside class="rail">
+            <div class="sec">
+              <div class="kicker">层级 1 · 店铺项目</div>
+              <div class="proj strong-ring">
+                <div class="row">
+                  <div>
+                    <strong>Nordic Home 旗舰店</strong>
+                    <small>Shopify · 本项目 12 条任务</small>
+                  </div>
+                  <span>▾</span>
+                </div>
+                <div class="link">管理全部项目 →</div>
+              </div>
+            </div>
+            <div class="sec grow">
+              <div class="kicker">层级 2 · 本项目任务</div>
+              <button class="btn" type="button">＋ 新建对话任务</button>
+              <div class="tabs">
+                <div class="tab on">全部</div>
+                <div class="tab">图生图</div>
+                <div class="tab">文生图</div>
+              </div>
+              <div class="task on">白底主图优化<em>进行中 · 图生图</em></div>
+              <div class="task">场景图 · 客厅<em>已完成</em></div>
+            </div>
+            <div class="sec foot">
+              <div class="foot-item"><span class="dot"></span>提示词管理</div>
+              <div class="foot-item"><span class="dot"></span>素材库</div>
+            </div>
+          </aside>
+          <div class="chat">
+            <div class="kicker">对话生图</div>
+            <div class="box">对话流</div>
+            <div class="box">输入框</div>
+          </div>
+          <div class="canvas">
+            <div class="kicker">预览画布</div>
+            <div class="box tall">生成结果</div>
+          </div>
+        </div>
+      </div>
+      <p class="callout"><b>过重点：</b>蓝底卡片 + 副文案 + 独立链接行，和任务区抢注意力。</p>
+    </section>
+
+    <!-- B -->
+    <section class="card" id="b">
+      <h2>③ 方案 B <span class="tag alt">改动最小</span><span class="tag">加大顶栏项目</span></h2>
+      <div class="frame">
+        <div class="topbar two-row">
+          <div class="top-row">
+            <span class="brand">商品素材工作台</span>
+            <span style="margin-left:auto" class="pill">运营 · 张敏</span>
+          </div>
+          <div class="top-row">
+            <span class="pill big strong-ring">店铺项目：Nordic Home 旗舰店 ▾ <span class="anno blue">加大</span></span>
+            <span class="pill">管理项目</span>
+          </div>
+        </div>
+        <div class="body">
+          <aside class="rail">
+            <div class="sec">
+              <div class="kicker">任务记录 <span class="anno">仍为主</span></div>
+              <button class="btn" type="button">＋ 新建对话任务</button>
+              <div class="tabs">
+                <div class="tab on">全部</div>
+                <div class="tab">图生图</div>
+                <div class="tab">文生图</div>
+              </div>
+            </div>
+            <div class="sec grow">
+              <div class="task on">白底主图优化<em>进行中 · 图生图</em></div>
+              <div class="task">场景图 · 客厅<em>已完成</em></div>
+              <div class="task">社媒种草图<em>草稿</em></div>
+            </div>
+            <div class="sec foot">
+              <div class="foot-item"><span class="dot"></span>店铺项目</div>
+              <div class="foot-item"><span class="dot"></span>提示词管理</div>
+              <div class="foot-item"><span class="dot"></span>素材库</div>
+            </div>
+          </aside>
+          <div class="chat">
+            <div class="kicker">对话生图</div>
+            <div class="box">对话流</div>
+            <div class="box">输入框</div>
+          </div>
+          <div class="canvas">
+            <div class="kicker">预览画布</div>
+            <div class="box tall">生成结果</div>
+          </div>
+        </div>
+      </div>
+      <p class="callout"><b>要点：</b>项目更醒目，但左栏结构基本不变——项目仍不在任务「之上」，层级感弱于 A。</p>
+    </section>
+
+    <!-- C -->
+    <section class="card" id="c">
+      <h2>④ 方案 C <span class="tag alt">边界最清</span><span class="tag">先选项目再进工作台</span></h2>
+      <div class="frame">
+        <div class="topbar">
+          <span class="brand">商品素材工作台</span>
+          <span style="margin-left:auto" class="pill">运营 · 张敏</span>
+        </div>
+        <div class="home">
+          <h3>选择店铺项目 <span class="anno blue">默认首页</span></h3>
+          <p>任务 / 素材按项目隔离。先进入项目，再看到任务记录。</p>
+          <div class="proj-grid">
+            <div class="proj-card on">
+              <strong>Nordic Home 旗舰店</strong>
+              <small>12 任务 · Shopify</small>
+              <button class="btn" type="button" style="margin-top:10px">进入生图</button>
+            </div>
+            <div class="proj-card">
+              <strong>Urban Bag EU</strong>
+              <small>5 任务 · 独立站</small>
+              <button class="btn ghost" type="button" style="margin-top:10px">进入生图</button>
+            </div>
+            <div class="proj-card">
+              <strong>＋ 新建项目</strong>
+              <small>创建客户店铺容器</small>
+            </div>
+          </div>
+          <div class="arrow">↓ 点击「进入生图」后</div>
+          <div class="frame" style="border-style:solid;margin-top:4px">
+            <div class="topbar">
+              <span class="brand">商品素材工作台</span>
+              <span class="pill big">当前：Nordic Home ▾</span>
+              <span style="margin-left:auto" class="pill">运营 · 张敏</span>
+            </div>
+            <div class="body" style="min-height:160px;grid-template-columns:180px 1fr 1fr">
+              <aside class="rail" style="min-height:160px">
+                <div class="sec grow">
+                  <div class="kicker">本项目任务</div>
+                  <div class="task on">白底主图优化<em>…</em></div>
+                  <div class="task">场景图 · 客厅<em>…</em></div>
+                </div>
+              </aside>
+              <div class="chat"><div class="box tall" style="min-height:120px">对话</div></div>
+              <div class="canvas"><div class="box tall" style="min-height:120px">画布</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="callout"><b>要点：</b>项目是门槛，边界最清晰；日常连做多任务时会多一步「先回项目页」。</p>
+    </section>
+  </div>
+
+  <section class="card" id="table">
+    <h2>⑤ 一眼对照</h2>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th style="width:18%">维度</th>
+          <th>现状</th>
+          <th>A 轻量行（采用）</th>
+          <th>B 加大顶栏项目</th>
+          <th>C 先选项目再工作台</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>项目位置</b></td>
+          <td>顶栏小下拉 + 左下脚</td>
+          <td>左栏顶部单行「当前店铺 · 名 ▾」</td>
+          <td>顶栏加粗第二行</td>
+          <td>独立项目首页</td>
+        </tr>
+        <tr>
+          <td><b>任务位置</b></td>
+          <td>左栏主角</td>
+          <td>项目下方的「本项目任务」</td>
+          <td>仍是左栏主角</td>
+          <td>进入项目后才出现</td>
+        </tr>
+        <tr>
+          <td><b>层级感</b></td>
+          <td>弱</td>
+          <td>强（项目 → 任务）</td>
+          <td>中</td>
+          <td>最强（先容器后内容）</td>
+        </tr>
+        <tr>
+          <td><b>生图效率</b></td>
+          <td>高</td>
+          <td>高（几乎不增步）</td>
+          <td>高</td>
+          <td>略低（多一步选择）</td>
+        </tr>
+        <tr>
+          <td><b>改造成本</b></td>
+          <td>—</td>
+          <td>中（改左栏）</td>
+          <td>低（改顶栏）</td>
+          <td>中高（改默认路由）</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="callout" style="margin-bottom:0">
+      当前采用：<b>A 轻量</b>——层级是项目→任务，但项目只做一行上下文，不抢任务区。
+    </p>
+  </section>
+</body>
+</html>
