@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>布局参考 · Cursor 式对话工作台（方案 1）</title>
+  <style>
+    :root {
+      --ink: #1a1d23;
+      --mute: #6b7280;
+      --line: #d8dce3;
+      --soft: #eef0f4;
+      --panel: #f7f8fa;
+      --white: #fff;
+      --accent: #2457d6;
+      --accent-soft: #eaf0ff;
+      --ok: #1f6b3a;
+      --warn: #9a5b00;
+      --rail: #f0f1f4;
+      --rail-active: #e4e7ee;
+      --shadow: 0 12px 32px rgba(26, 29, 35, 0.08);
+      --font: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: var(--font);
+      color: var(--ink);
+      background: #e6e8ee;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 100%;
+    }
+
+    .page-note {
+      padding: 10px 16px;
+      background: #fff8ea;
+      border-bottom: 1px solid #e0c089;
+      color: #7a4d00;
+      font-size: 13px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .page-note strong { color: #5c3d00; }
+    .page-note a { color: var(--accent); }
+
+    /* ===== App shell ===== */
+    .app {
+      margin: 12px;
+      height: calc(100vh - 56px);
+      min-height: 640px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--white);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: 48px 1fr;
+    }
+
+    /* Top bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--white);
+      font-size: 13px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .brand-mark {
+      width: 22px; height: 22px; border-radius: 6px;
+      background: var(--ink); color: #fff;
+      display: grid; place-items: center; font-size: 10px;
+    }
+    .pill, .btn {
+      border: 1px solid var(--line);
+      background: var(--soft);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .spacer { flex: 1; }
+    .anno {
+      font-size: 11px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px dashed #9db4ef;
+      border-radius: 999px;
+      padding: 2px 8px;
+    }
+
+    /* Main: task rail | chat | canvas */
+    .main {
+      display: grid;
+      grid-template-columns: 228px minmax(320px, 1.05fr) minmax(340px, 1fr);
+      min-height: 0;
+    }
+
+    /* ===== Left rail (Cursor-like) ===== */
+    .rail {
+      background: var(--rail);
+      border-right: 1px solid var(--line);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 0;
+    }
+    .rail-head {
+      padding: 10px 10px 8px;
+      display: grid;
+      gap: 8px;
+    }
+    .rail-head .row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rail-title {
+      font-size: 12px;
+      font-weight: 650;
+      color: var(--mute);
+      letter-spacing: 0.02em;
+    }
+    .btn.block {
+      width: 100%;
+      justify-content: center;
+      display: inline-flex;
+      background: var(--white);
+    }
+    .btn.block.primary { background: var(--accent); color: #fff; }
+
+    .task-list {
+      overflow: auto;
+      padding: 0 8px 8px;
+      display: grid;
+      gap: 4px;
+      align-content: start;
+    }
+    .task-item {
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: 10px;
+      padding: 9px 10px;
+      text-align: left;
+      cursor: default;
+    }
+    .task-item.on {
+      background: var(--white);
+      border-color: var(--line);
+      box-shadow: 0 1px 0 rgba(0,0,0,.02);
+    }
+    .task-item:hover { background: var(--rail-active); }
+    .task-item .t {
+      font-size: 13px;
+      font-weight: 560;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .task-item .m {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 11px;
+      color: var(--mute);
+    }
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #9aa3b2;
+      flex: 0 0 auto;
+    }
+    .dot.ok { background: var(--ok); }
+    .dot.run { background: var(--accent); }
+    .dot.fail { background: #b42318; }
+    .tag-mini {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 6px;
+      background: var(--white);
+      font-size: 10px;
+    }
+
+    /* Bottom function entries — Cursor style */
+    .rail-foot {
+      border-top: 1px solid var(--line);
+      background: #ebecef;
+      padding: 8px 6px;
+      display: grid;
+      gap: 2px;
+    }
+    .foot-item {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 8px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-size: 12px;
+      color: var(--ink);
+      background: transparent;
+      text-align: left;
+      cursor: default;
+    }
+    .foot-item:hover { background: rgba(255,255,255,.55); }
+    .foot-item.on {
+      background: var(--white);
+      border-color: var(--line);
+      font-weight: 600;
+    }
+    .ico {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #445;
+    }
+    .foot-item.on .ico {
+      background: var(--accent-soft);
+      border-color: #9db4ef;
+      color: var(--accent);
+    }
+
+    /* ===== Chat pane ===== */
+    .chat {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-width: 0;
+      border-right: 1px solid var(--line);
+      background: var(--white);
+    }
+    .pane-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .status {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #e8f7ee;
+      color: var(--ok);
+      border: 1px solid #b7dfc4;
+    }
+    .chat-stream {
+      overflow: auto;
+      padding: 14px 14px 8px;
+      background: #fafbfc;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+    .msg {
+      max-width: 92%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      font-size: 12.5px;
+      line-height: 1.5;
+      background: var(--white);
+    }
+    .msg.user {
+      margin-left: auto;
+      background: var(--accent-soft);
+      border-color: #c5d4ff;
+    }
+    .msg.sys {
+      background: var(--panel);
+      color: var(--mute);
+      max-width: 100%;
+    }
+    .msg .ops {
+      margin-top: 8px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      border: 1px solid var(--line);
+      background: var(--white);
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+    }
+    .chip.on {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .composer {
+      border-top: 1px solid var(--line);
+      padding: 10px 12px 12px;
+      background: var(--white);
+      display: grid;
+      gap: 8px;
+    }
+    .type-seg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .type-btn {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 10px;
+      padding: 8px 10px;
+      text-align: left;
+      font-size: 12px;
+    }
+    .type-btn small {
+      display: block;
+      color: var(--mute);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+    .type-btn.on {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: #1e3f99;
+      font-weight: 600;
+    }
+    .scheme-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+    .scheme {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 11px;
+      color: var(--mute);
+      background: var(--panel);
+    }
+    .scheme.on {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: #1e3f99;
+      font-weight: 600;
+    }
+    .tool-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .prompt-box {
+      border: 1px solid #c5d4ff;
+      background: #f7f9ff;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #1e3f99;
+    }
+    .prompt-box .h {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-weight: 650;
+    }
+    .attach {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--mute);
+    }
+    .thumb-sm {
+      width: 36px; height: 36px; border-radius: 6px;
+      background: linear-gradient(135deg, #dfe5ee, #c8d0dc);
+      border: 1px solid var(--line);
+      flex: 0 0 auto;
+    }
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 68px;
+      resize: none;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      font: inherit;
+      font-size: 13px;
+      background: #fff;
+    }
+
+    /* ===== Canvas ===== */
+    .canvas {
+      display: grid;
+      grid-template-rows: auto 1fr auto auto;
+      min-width: 0;
+      background: var(--panel);
+      gap: 0;
+    }
+    .stage {
+      margin: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background:
+        linear-gradient(135deg, #eceff4 0%, #d9e0ea 100%);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #445;
+      position: relative;
+      min-height: 280px;
+    }
+    .stage .badge {
+      position: absolute;
+      top: 10px; left: 10px;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #e8f7ee;
+      border: 1px solid #b7dfc4;
+      color: var(--ok);
+    }
+    .stage .ph {
+      width: min(46%, 220px);
+      aspect-ratio: 3/4;
+      border-radius: 12px;
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(255,255,255,.8);
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334;
+      box-shadow: var(--shadow);
+    }
+    .drafts, .versions {
+      padding: 0 12px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 12px;
+    }
+    .drafts .label, .versions .label {
+      color: var(--mute);
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 2px;
+    }
+    .thumb {
+      width: 52px;
+      aspect-ratio: 3/4;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #dfe5ee;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      color: #556;
+    }
+    .thumb.on {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    /* Legend under app */
+    .legend {
+      margin: 0 12px 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 1100px) {
+      .legend { grid-template-columns: 1fr; }
+      .main { grid-template-columns: 200px 1fr; }
+      .canvas { display: none; }
+    }
+    .card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--mute);
+      box-shadow: var(--shadow);
+    }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      color: var(--ink);
+    }
+    .card ul { margin: 0; padding-left: 18px; }
+    .card li { margin: 3px 0; }
+    .hi { color: var(--accent); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="page-note">
+    <strong>HTML 布局参考（方案 1）</strong>
+    <span>最左 = 对话式任务记录 · 左下 = 功能入口（参考 Cursor）· 中 = 对话 · 右 = 画布。此页为静态线框，非可交互原型。</span>
+    <a href="index.html">打开现有可点原型 →</a>
+  </div>
+
+  <div class="app" aria-label="Cursor 式布局参考">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">AI</div>
+        <span>商品视觉生成工作台</span>
+      </div>
+      <span class="pill">项目：Nordic Home 旗舰店 ▾</span>
+      <span class="anno">顶部：项目切换 + 新建任务 + 账号</span>
+      <span class="spacer"></span>
+      <span class="btn primary">新建生成任务</span>
+      <span class="pill">运营 · 张敏</span>
+    </header>
+
+    <div class="main">
+      <!-- LEFT RAIL -->
+      <aside class="rail">
+        <div class="rail-head">
+          <div class="row">
+            <span class="rail-title">任务记录</span>
+            <span class="anno">Cursor History</span>
+          </div>
+          <button class="btn block primary" type="button">＋ 新建对话任务</button>
+        </div>
+
+        <div class="task-list">
+          <div class="task-item on">
+            <div class="t">米白针织开衫 · 自然室内</div>
+            <div class="m">
+              <span class="dot ok"></span>
+              <span class="tag-mini">图生图</span>
+              <span>成功 · 10:24</span>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="t">托特包 · 咖啡馆浅景</div>
+            <div class="m">
+              <span class="dot run"></span>
+              <span class="tag-mini">图生图</span>
+              <span>生成中 · 10:18</span>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="t">香氛瓶 · 北欧静物创意</div>
+            <div class="m">
+              <span class="dot ok"></span>
+              <span class="tag-mini">文生图</span>
+              <span>成功 · 昨天</span>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="t">运动鞋白底主图</div>
+            <div class="m">
+              <span class="dot fail"></span>
+              <span class="tag-mini">图生图</span>
+              <span>失败 · 昨天</span>
+            </div>
+          </div>
+          <div class="task-item">
+            <div class="t">美妆精华 · 浴室晨光</div>
+            <div class="m">
+              <span class="dot"></span>
+              <span class="tag-mini">文生图</span>
+              <span>已拦截 · 周一</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rail-foot" aria-label="功能入口">
+          <div class="foot-item">
+            <span class="ico">项</span>
+            <span>店铺项目</span>
+          </div>
+          <div class="foot-item">
+            <span class="ico">提</span>
+            <span>我的提示词</span>
+          </div>
+          <div class="foot-item">
+            <span class="ico">模</span>
+            <span>公共模板管理</span>
+          </div>
+          <div class="foot-item">
+            <span class="ico">材</span>
+            <span>项目素材库</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CHAT -->
+      <section class="chat">
+        <div class="pane-head">
+          <span>对话生图</span>
+          <span class="status">生成成功</span>
+          <span class="spacer"></span>
+          <span class="anno">中栏 = 对话记录 + Composer</span>
+        </div>
+
+        <div class="chat-stream">
+          <div class="msg sys">已选择公共模板「欧美服饰 · 自然生活」v2 · 服饰鞋靴。可继续补充商品信息后生成。</div>
+          <div class="msg user">
+            保留商品主体，换成明亮北欧客厅，模特自然站姿，3:4 主图。
+            <div class="ops">
+              <span class="chip">引用原图</span>
+              <span class="chip">保存提示词</span>
+            </div>
+          </div>
+          <div class="msg">
+            已生成 4 张草稿。请在右侧选择满意结果，可「调整生成」或「确认高清」。
+            <div class="ops">
+              <span class="chip">查看有效提示词</span>
+              <span class="chip">收藏模板</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="composer">
+          <div class="type-seg">
+            <div class="type-btn on">商品图加工<small>图生图 · 需上传原图</small></div>
+            <div class="type-btn">创意生图<small>文生图 · 文字描述即可</small></div>
+          </div>
+          <div class="tool-row">
+            <span class="btn">上传图片</span>
+            <span class="btn">结构化参数</span>
+            <span class="chip on">服饰鞋靴</span>
+            <span class="chip">3:4</span>
+          </div>
+          <div class="attach">
+            <div class="thumb-sm"></div>
+            <span>已上传：knit-cardigan.jpg · PNG/JPG/WEBP</span>
+          </div>
+          <div class="input-row">
+            <textarea placeholder="描述画面，或对当前草稿提出调整…"></textarea>
+            <span class="btn primary" style="align-self:end;height:40px;display:inline-flex;align-items:center;">发送</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- CANVAS -->
+      <section class="canvas">
+        <div class="pane-head">
+          <span>预览画布</span>
+          <span class="pill">任务 T-1042</span>
+          <span class="spacer"></span>
+          <span class="btn">对比原图</span>
+          <span class="btn">保存素材库</span>
+          <span class="btn primary">下载</span>
+        </div>
+        <div class="stage">
+          <span class="badge">高清成品可确认</span>
+          <div class="ph">草稿 B 预览</div>
+        </div>
+        <div class="drafts">
+          <span class="label">草稿</span>
+          <div class="thumb">A</div>
+          <div class="thumb on">B</div>
+          <div class="thumb">C</div>
+          <div class="thumb">D</div>
+        </div>
+        <div class="versions">
+          <span class="label">版本</span>
+          <span class="chip">v1 原图</span>
+          <span class="chip on">v2 草稿</span>
+          <span class="chip">v3 调整</span>
+          <span class="spacer"></span>
+          <span class="btn">重新生成</span>
+          <span class="btn primary">调整生成</span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="card">
+      <h3>① 最左任务轨</h3>
+      <ul>
+        <li>当前项目下的<span class="hi">对话式任务记录</span></li>
+        <li>展示类型、状态、时间；点击切换任务</li>
+        <li>顶部固定「新建对话任务」</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>② 左下功能入口（Cursor）</h3>
+      <ul>
+        <li>店铺项目 / 我的提示词 / 公共模板 / 素材库</li>
+        <li>常驻底栏，不挤占对话主区</li>
+        <li>对应 PRD 左侧导航能力</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>③ Composer 补齐点</h3>
+      <ul>
+        <li>类型切换 · 上传 · 结构化参数</li>
+        <li>提示词方案与有效提示词不在此处展示</li>
+        <li>右栏仍负责草稿、版本、高清、保存下载</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
