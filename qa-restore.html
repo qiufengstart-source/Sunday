@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>恢复 QA 验收记录</title>
+  <style>
+    body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; max-width: 640px; margin: 48px auto; padding: 0 20px; color: #1f2a37; line-height: 1.6; }
+    .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; background: #fff; }
+    h1 { font-size: 22px; margin: 0 0 12px; }
+    button { background: #2563eb; color: #fff; border: 0; border-radius: 8px; padding: 10px 16px; font-size: 15px; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .ok { color: #067647; }
+    .err { color: #b42318; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>恢复「QA验收-V5完整测试集」</h1>
+    <p>测试记录保存在浏览器本地存储。Cursor 内置页与外部 Chrome/Safari <strong>不共用</strong>，所以外部打开会看不到项目。</p>
+    <p>点击下方按钮，将把验收快照写入当前浏览器的 <code>localStorage</code>，然后进入工作台。</p>
+    <p id="status">准备就绪。</p>
+    <button id="btn" type="button">导入验收记录并打开</button>
+  </div>
+  <script>
+    const KEY = "ai-visual-workbench-proto-v5";
+    const btn = document.getElementById("btn");
+    const status = document.getElementById("status");
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      status.textContent = "正在下载验收快照…";
+      try {
+        const res = await fetch("/qa-acceptance-state.json", { cache: "no-store" });
+        if (!res.ok) throw new Error("快照文件不存在或服务未启动");
+        const data = await res.json();
+        if (!data || !Array.isArray(data.projects)) throw new Error("快照格式不正确");
+        localStorage.setItem(KEY, JSON.stringify(data));
+        status.className = "ok";
+        status.textContent = "已导入项目「" + (data.projects[0]?.name || "QA验收") + "」，正在跳转…";
+        location.href = "/?restored=1";
+      } catch (e) {
+        status.className = "err";
+        status.textContent = "导入失败：" + (e.message || e);
+        btn.disabled = false;
+      }
+    });
+    // auto-import if ?auto=1
+    if (new URLSearchParams(location.search).get("auto") === "1") btn.click();
+  </script>
+</body>
+</html>
