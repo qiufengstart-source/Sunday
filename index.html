@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>商品素材工作台 V5.0 · 对话式原型</title>
+  <link rel="stylesheet" href="styles.css?v=20260802-assets-dedupe" />
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <div class="brand" title="商品素材工作台">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 28 28" fill="none">
+            <rect x="3.5" y="5" width="15" height="18" rx="3" stroke="currentColor" stroke-width="1.7"/>
+            <path d="m7 17 3.2-3.6 2.4 2.4 2.1-2.2L17 16.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="9.2" cy="10.2" r="1.15" fill="currentColor"/>
+            <path d="M19.2 8.2c1.6-.2 2.9 1 2.8 2.6-.1.9-.6 1.6-1.3 2.1l2.6 5.1c.2.4 0 .9-.4 1.1l-1.3.5c-.4.2-.9 0-1.1-.4l-2.5-5c-.9.2-1.9-.2-2.4-1.1-.7-1.3 0-2.9 1.4-3.4.4-.1.8-.2 1.2-.1Z" fill="currentColor"/>
+            <path d="M20.4 10.1v1.6M19.6 10.9h1.6" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="brand-text">商品素材工作台</span>
+      </div>
+      <div class="top-actions right">
+        <span class="chip soft" id="user-chip">运营 · 张敏</span>
+      </div>
+    </header>
+
+    <div class="dropdown" id="project-dropdown" role="menu">
+      <div class="dd-head">
+        <span>切换店铺项目</span>
+        <button class="btn sm" id="btn-create-project-from-dd" type="button">新建</button>
+      </div>
+      <div id="project-dropdown-list"></div>
+    </div>
+
+    <main class="view">
+      <!-- Onboarding -->
+      <section class="view-panel" id="view-onboarding">
+        <div class="empty-state">
+          <div class="box">
+            <h2>暂无店铺项目</h2>
+            <p>创建项目后即可开始生成商品视觉素材。任务与素材均按店铺项目隔离。</p>
+            <button class="btn primary" id="btn-create-first-project" type="button">创建项目</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Workbench: rail | chat | canvas -->
+      <section class="view-panel" id="view-workbench">
+        <aside class="task-rail" aria-label="本项目任务">
+          <div class="rail-project">
+            <div class="rail-project-kicker">当前店铺</div>
+            <div class="proj-lite-row">
+              <button class="proj-lite-btn" id="btn-project-switch" type="button" title="切换店铺项目">
+                <svg class="ico-svg proj-lite-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h7l2 2H20.5v9.5a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V7.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M3.5 10.5h17" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+                <span class="proj-lite-name" id="current-project-label">未选择</span>
+                <span class="proj-lite-chev" aria-hidden="true">▾</span>
+              </button>
+              <button class="proj-manage-link" data-nav="projects" type="button" title="管理全部店铺项目">管理</button>
+            </div>
+          </div>
+          <div class="rail-head">
+            <div class="rail-title-row">
+              <span class="rail-title">本项目任务</span>
+              <span class="rail-count" id="task-rail-count">0</span>
+            </div>
+            <button class="btn block primary sm" id="btn-new-task-rail" type="button">＋ 新建对话任务</button>
+          </div>
+          <div class="task-tabs" id="task-tabs" role="tablist" aria-label="按生成方式筛选">
+            <button class="task-tab on" type="button" data-task-filter="all">全部<span class="n" id="task-count-all">0</span></button>
+            <button class="task-tab" type="button" data-task-filter="img2img">图生图<span class="n" id="task-count-img2img">0</span></button>
+            <button class="task-tab" type="button" data-task-filter="txt2img">文生图<span class="n" id="task-count-txt2img">0</span></button>
+          </div>
+          <div class="task-list" id="task-list"></div>
+          <nav class="rail-foot" aria-label="功能入口">
+            <button class="foot-item" data-nav="prompts" type="button" title="提示词管理">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5h10A1.5 1.5 0 0 1 18.5 6v14L12 16.5 5.5 20V6A1.5 1.5 0 0 1 7 4.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 9h6M9 12h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+              <span class="foot-label">提示词管理</span>
+            </button>
+            <button class="foot-item" data-nav="assets" type="button" title="项目素材库">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m7.5 15 3-3.5 2.5 2.5 2-2L16.5 15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/></svg>
+              <span class="foot-label">素材库</span>
+            </button>
+          </nav>
+        </aside>
+
+        <aside class="chat-pane">
+          <div class="pane-head">
+            <span class="title">对话生图</span>
+            <span class="spacer"></span>
+            <span class="status-pill" id="task-status-pill">暂无任务</span>
+          </div>
+          <div class="chat-stream" id="chat-stream" aria-live="polite"></div>
+          <div class="composer">
+            <div class="type-seg" role="group" aria-label="生图类型">
+              <button type="button" class="type-seg-btn on" id="type-img2img" data-task-type="img2img">
+                商品图加工
+                <small>图生图 · 需上传原图</small>
+              </button>
+              <button type="button" class="type-seg-btn" id="type-txt2img" data-task-type="txt2img">
+                创意生图
+                <small>文生图 · 文字描述即可</small>
+              </button>
+            </div>
+            <div class="composer-alert hidden" id="composer-alert" role="status"></div>
+            <div class="composer-status" id="composer-status">
+              <div class="quote-preview hidden" id="quote-preview">
+                <img id="quote-thumb" alt="引用图" />
+                <div class="quote-meta">
+                  <strong>引用修改</strong>
+                  <span id="quote-label">—</span>
+                </div>
+                <button class="btn sm ghost" id="btn-clear-quote" type="button">取消</button>
+              </div>
+              <div class="applied-prompt hidden" id="applied-prompt">
+                <span id="applied-prompt-label">未选用提示词</span>
+                <button class="btn sm ghost" id="btn-clear-applied" type="button">清除</button>
+              </div>
+            </div>
+            <div class="composer-box">
+              <div class="composer-attach-row">
+                <button class="composer-attach-btn" id="btn-upload" type="button" title="上传图片">
+                  <span class="composer-attach-plus" aria-hidden="true">+</span>
+                  <span class="composer-attach-cap">上传</span>
+                </button>
+                <div class="attach-preview hidden" id="attach-preview">
+                  <img id="attach-thumb" alt="附件预览" />
+                  <button class="btn sm ghost" id="btn-clear-attach" type="button" title="移除">×</button>
+                </div>
+              </div>
+              <textarea id="composer-input" placeholder="描述要生成的画面"></textarea>
+              <div class="composer-box-foot">
+                <label class="gen-chip" title="输出分辨率">
+                  <select id="gen-resolution" aria-label="分辨率">
+                    <option value="1K" selected>1K</option>
+                    <option value="2K">2K</option>
+                  </select>
+                </label>
+                <label class="gen-chip" title="画面比例">
+                  <select id="gen-ratio" aria-label="画面比例">
+                    <option value="1:1">1:1</option>
+                    <option value="2:3">2:3</option>
+                    <option value="3:4">3:4</option>
+                    <option value="4:3">4:3</option>
+                    <option value="16:9">16:9</option>
+                    <option value="9:16" selected>9:16</option>
+                  </select>
+                </label>
+                <label class="gen-chip" title="生成张数">
+                  <select id="gen-count" aria-label="生成张数">
+                    <option value="1" selected>1 张</option>
+                    <option value="2">2 张</option>
+                    <option value="3">3 张</option>
+                    <option value="4">4 张</option>
+                  </select>
+                </label>
+                <button class="btn sm" id="btn-toggle-params" type="button">快捷参数</button>
+                <button class="btn sm" id="btn-pick-prompt" type="button">选用提示词</button>
+                <span class="spacer"></span>
+                <button class="btn primary" id="btn-send" type="button">发送</button>
+              </div>
+            </div>
+            <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp" hidden />
+          </div>
+        </aside>
+
+        <section class="canvas-pane">
+          <div class="pane-head">
+            <span class="title">预览图片</span>
+            <span class="spacer"></span>
+            <button class="btn sm" id="btn-batch-download" type="button" disabled>批量下载</button>
+            <button class="btn sm" id="btn-save" type="button" disabled>保存素材库</button>
+          </div>
+          <div class="canvas-stage" id="canvas-stage">
+            <div class="canvas-badge"><span class="status-pill" id="canvas-badge">待生成</span></div>
+            <div class="canvas-empty" id="canvas-empty">
+              <h3>发送后在这里预览</h3>
+              <p>选中草稿可保存素材库，或引用继续修改。</p>
+            </div>
+            <div class="canvas-preview hidden" id="canvas-preview">
+              <img id="canvas-image" alt="当前预览" />
+            </div>
+          </div>
+          <div class="draft-strip" id="draft-strip">
+            <span class="label">草稿</span>
+            <span class="chip soft" id="draft-empty-hint">生成成功后在此选择候选图</span>
+          </div>
+          <div class="version-bar" id="version-panel">
+            <span class="label">版本</span>
+            <div class="version-chips" id="version-timeline">
+              <span class="chip soft">暂无</span>
+            </div>
+            <span class="spacer"></span>
+            <button class="btn sm" id="btn-regenerate" type="button" disabled>重新生成</button>
+            <button class="btn sm" id="btn-adjust" type="button" disabled>引用修改</button>
+          </div>
+          <aside class="params-drawer" id="params-drawer" aria-hidden="true">
+            <div class="drawer-head">
+              <strong>快捷参数输入</strong>
+              <span class="spacer"></span>
+              <button class="btn sm ghost" id="btn-close-params" type="button">收起</button>
+            </div>
+            <div class="params-body">
+              <div class="notice">快捷参数（风格/品类细节/负向词/补充）随本次生图只用一次，生成后自动清空；比例、分辨率、张数会保留。</div>
+              <div class="field">
+                <label>品类</label>
+                <select id="param-category">
+                  <option value="">请选择</option>
+                  <option value="apparel">服饰鞋靴</option>
+                  <option value="bag">箱包配饰</option>
+                  <option value="digital">3C 数码</option>
+                  <option value="beauty">美妆日化</option>
+                  <option value="other">其他 / 创意商品图</option>
+                </select>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>画面比例（默认 9:16）</label>
+                  <div class="suggest-field" data-combo="ratio" data-options='["1:1","2:3","3:4","4:3","16:9","9:16"]'>
+                    <input id="param-ratio" type="text" placeholder="默认 9:16" autocomplete="off" />
+                    <button class="suggest-btn" type="button" aria-label="常用比例" title="常用选项">▾</button>
+                    <ul class="suggest-menu" hidden></ul>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>分辨率</label>
+                  <select id="param-resolution">
+                    <option value="1K" selected>1K（默认）</option>
+                    <option value="2K">2K</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>生成数量（多张=多文件，非拼图）</label>
+                  <select id="param-count">
+                    <option value="1" selected>1 张（默认）</option>
+                    <option value="2">2 张</option>
+                    <option value="3">3 张</option>
+                    <option value="4">4 张</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>风格市场</label>
+                  <div class="suggest-field" data-combo="market" data-options='["欧美站 · 自然生活","欧美站 · 极简电商","欧美站 · 高级感广告","欧美站 · 户外运动","欧美站 · 节日促销","白底主图 · 电商详情","社媒种草 · 生活方式"]'>
+                    <input id="param-market" type="text" placeholder="如 欧美站 · 自然生活" autocomplete="off" />
+                    <button class="suggest-btn" type="button" aria-label="常用风格" title="常用选项">▾</button>
+                    <ul class="suggest-menu" hidden></ul>
+                  </div>
+                </div>
+              </div>
+              <div id="param-fields"></div>
+              <div class="field">
+                <label>不希望出现的元素</label>
+                <div class="suggest-field" data-combo="negative" data-options='["文字水印","杂乱背景","多余肢体 / 畸形手部","品牌 Logo 变形","过曝 / 过暗","多余道具抢夺主体"]'>
+                  <input id="param-negative" type="text" placeholder="如 文字水印，可直接输入" autocomplete="off" />
+                  <button class="suggest-btn" type="button" aria-label="常用限制" title="常用选项">▾</button>
+                  <ul class="suggest-menu" hidden></ul>
+                </div>
+              </div>
+              <div class="field">
+                <label>补充描述</label>
+                <textarea id="param-extra" placeholder="用自然语言补充即可"></textarea>
+              </div>
+              <p class="help">品牌 Logo / 包装文字 / 商品细节需人工复核。上传素材请确保拥有合法使用权。</p>
+            </div>
+            <div class="drawer-foot">
+              <button class="btn block primary" id="btn-apply-params" type="button">立即生图</button>
+            </div>
+          </aside>
+        </section>
+      </section>
+
+      <!-- Projects -->
+      <section class="view-panel" id="view-projects">
+        <div class="page-shell">
+          <aside class="page-rail">
+            <button class="foot-item" data-nav="workbench" type="button" title="返回生图">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v9.5H5V6.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m8 20 4-2.5L16 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 10.5h7M8.5 13.5h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+              <span class="foot-label">返回生图</span>
+            </button>
+            <button class="foot-item on" data-nav="projects" type="button" title="店铺项目">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h7l2 2H20.5v9.5a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V7.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M3.5 10.5h17" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+              <span class="foot-label">店铺项目</span>
+            </button>
+            <button class="foot-item" data-nav="prompts" type="button" title="提示词管理">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5h10A1.5 1.5 0 0 1 18.5 6v14L12 16.5 5.5 20V6A1.5 1.5 0 0 1 7 4.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 9h6M9 12h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+              <span class="foot-label">提示词管理</span>
+            </button>
+            <button class="foot-item" data-nav="assets" type="button" title="素材库">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m7.5 15 3-3.5 2.5 2.5 2-2L16.5 15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/></svg>
+              <span class="foot-label">素材库</span>
+            </button>
+          </aside>
+          <div class="page-main">
+            <div class="page-head">
+              <h2>店铺项目</h2>
+              <span class="spacer"></span>
+              <button class="btn primary" id="btn-create-project" type="button">新建项目</button>
+            </div>
+            <div class="page-body" id="project-cards"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- My prompts -->
+      <section class="view-panel" id="view-prompts">
+        <div class="page-shell">
+          <aside class="page-rail">
+            <button class="foot-item" data-nav="workbench" type="button" title="返回生图">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v9.5H5V6.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m8 20 4-2.5L16 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 10.5h7M8.5 13.5h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+              <span class="foot-label">返回生图</span>
+            </button>
+            <button class="foot-item" data-nav="projects" type="button" title="店铺项目">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h7l2 2H20.5v9.5a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V7.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M3.5 10.5h17" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+              <span class="foot-label">店铺项目</span>
+            </button>
+            <button class="foot-item" data-nav="prompts" type="button" title="提示词管理">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5h10A1.5 1.5 0 0 1 18.5 6v14L12 16.5 5.5 20V6A1.5 1.5 0 0 1 7 4.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 9h6M9 12h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+              <span class="foot-label">提示词管理</span>
+            </button>
+            <button class="foot-item" data-nav="assets" type="button" title="素材库">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m7.5 15 3-3.5 2.5 2.5 2-2L16.5 15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/></svg>
+              <span class="foot-label">素材库</span>
+            </button>
+          </aside>
+          <div class="page-main">
+            <div class="page-head">
+              <h2>提示词管理</h2>
+              <span class="spacer"></span>
+              <button class="btn primary" id="btn-new-personal-prompt" type="button">新建个人提示词</button>
+              <button class="btn primary hidden" id="btn-new-template" type="button">新建模板提示词</button>
+            </div>
+            <div class="tabs" id="prompts-tabs">
+              <button class="tab on" data-prompt-tab="mine" type="button">我的提示词</button>
+              <button class="tab" data-prompt-tab="templates" type="button">模板提示词</button>
+              <button class="tab" data-prompt-tab="fav" type="button">收藏</button>
+            </div>
+            <div class="filter-bar" id="prompt-filters-mine">
+              <input id="prompt-search" type="search" placeholder="搜索名称 / 标签 / 内容" />
+              <select id="prompt-filter-type">
+                <option value="">全部生成方式</option>
+                <option value="img2img">商品图加工</option>
+                <option value="txt2img">创意生图</option>
+              </select>
+              <select id="prompt-filter-cat">
+                <option value="">全部品类</option>
+                <option value="apparel">服饰鞋靴</option>
+                <option value="bag">箱包配饰</option>
+                <option value="digital">3C 数码</option>
+                <option value="beauty">美妆日化</option>
+                <option value="other">其他</option>
+              </select>
+            </div>
+            <div class="filter-bar hidden" id="prompt-filters-templates">
+              <input id="template-search" type="search" placeholder="搜索模板提示词名称 / 说明" />
+              <select id="template-filter-status">
+                <option value="">全部状态</option>
+                <option value="published">已发布</option>
+                <option value="draft">草稿</option>
+                <option value="disabled">已停用</option>
+              </select>
+              <select id="template-filter-type">
+                <option value="">全部生成方式</option>
+                <option value="img2img">商品图加工</option>
+                <option value="txt2img">创意生图</option>
+              </select>
+            </div>
+            <div class="page-body" id="prompts-body"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Assets -->
+      <section class="view-panel" id="view-assets">
+        <div class="page-shell">
+          <aside class="page-rail">
+            <button class="foot-item" data-nav="workbench" type="button" title="返回生图">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14v9.5H5V6.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m8 20 4-2.5L16 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 10.5h7M8.5 13.5h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+              <span class="foot-label">返回生图</span>
+            </button>
+            <button class="foot-item" data-nav="projects" type="button" title="店铺项目">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h7l2 2H20.5v9.5a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V7.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M3.5 10.5h17" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+              <span class="foot-label">店铺项目</span>
+            </button>
+            <button class="foot-item" data-nav="prompts" type="button" title="提示词管理">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5h10A1.5 1.5 0 0 1 18.5 6v14L12 16.5 5.5 20V6A1.5 1.5 0 0 1 7 4.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 9h6M9 12h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+              <span class="foot-label">提示词管理</span>
+            </button>
+            <button class="foot-item on" data-nav="assets" type="button" title="素材库">
+              <svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m7.5 15 3-3.5 2.5 2.5 2-2L16.5 15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/></svg>
+              <span class="foot-label">素材库</span>
+            </button>
+          </aside>
+          <div class="page-main">
+            <div class="page-head">
+              <h2>项目素材库</h2>
+              <span class="chip soft" id="assets-project-label"></span>
+              <span class="spacer"></span>
+            </div>
+            <div class="page-body" id="assets-body"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Create / rename project -->
+  <div class="overlay" id="project-overlay">
+    <div class="modal" role="dialog" aria-labelledby="project-modal-title">
+      <div class="modal-head">
+        <h3 id="project-modal-title">创建店铺项目</h3>
+        <span class="spacer"></span>
+        <button class="btn ghost" data-close="project-overlay" type="button">关闭</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label>项目名称（建议含客户店铺名）</label>
+          <input id="project-name-input" type="text" placeholder="例如：Nordic Home 旗舰店" maxlength="40" />
+        </div>
+        <div class="field">
+          <label>平台备注（可选）</label>
+          <input id="project-note-input" type="text" placeholder="Shopify / 独立站等" maxlength="40" />
+        </div>
+        <div class="notice">V1.0 不提供跨项目素材引用。任务与素材均归属创建时所在项目。</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" data-close="project-overlay" type="button">取消</button>
+        <button class="btn primary" id="btn-confirm-create-project" type="button">创建并进入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pick prompt / template for current task -->
+  <div class="overlay" id="pick-overlay">
+    <div class="modal wide" role="dialog" aria-labelledby="pick-modal-title">
+      <div class="modal-head">
+        <h3 id="pick-modal-title">选用模板提示词或个人提示词</h3>
+        <span class="spacer"></span>
+        <button class="btn ghost" data-close="pick-overlay" type="button">关闭</button>
+      </div>
+      <div class="modal-body">
+        <div class="tabs" id="pick-tabs">
+          <button class="tab on" data-pick-tab="public" type="button">已发布模板提示词</button>
+          <button class="tab" data-pick-tab="personal" type="button">个人提示词</button>
+          <button class="tab" data-pick-tab="blank" type="button">空白创建</button>
+        </div>
+        <div id="pick-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Personal prompt editor -->
+  <div class="overlay" id="personal-prompt-overlay">
+    <div class="modal wide" role="dialog">
+      <div class="modal-head">
+        <h3 id="personal-prompt-title">新建个人提示词</h3>
+        <span class="spacer"></span>
+        <button class="btn ghost" data-close="personal-prompt-overlay" type="button">关闭</button>
+      </div>
+      <div class="modal-body form-grid">
+        <div class="field">
+          <label>提示词名称 *</label>
+          <input id="pp-name" type="text" maxlength="40" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>适用生成方式 *</label>
+            <select id="pp-type">
+              <option value="img2img">商品图加工</option>
+              <option value="txt2img">创意生图</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>适用品类 *</label>
+            <select id="pp-category">
+              <option value="apparel">服饰鞋靴</option>
+              <option value="bag">箱包配饰</option>
+              <option value="digital">3C 数码</option>
+              <option value="beauty">美妆日化</option>
+              <option value="other">其他</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>使用场景/风格标签</label>
+          <input id="pp-tags" type="text" placeholder="欧美家居, 产品白底图" />
+        </div>
+        <div class="field">
+          <label>提示词内容 *</label>
+          <textarea id="pp-content" rows="5"></textarea>
+        </div>
+        <div class="field">
+          <label>负面限制描述</label>
+          <textarea id="pp-negative" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" data-close="personal-prompt-overlay" type="button">取消</button>
+        <button class="btn primary" id="btn-save-personal-prompt" type="button">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Public template editor -->
+  <div class="overlay" id="template-overlay">
+    <div class="modal wide" role="dialog">
+      <div class="modal-head">
+        <h3 id="template-modal-title">新建模板提示词</h3>
+        <span class="spacer"></span>
+        <button class="btn ghost" data-close="template-overlay" type="button">关闭</button>
+      </div>
+      <div class="modal-body form-grid">
+        <div class="field">
+          <label>模板提示词名称 *</label>
+          <input id="tpl-name" type="text" maxlength="40" />
+        </div>
+        <div class="field">
+          <label>说明</label>
+          <input id="tpl-desc" type="text" maxlength="80" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>适用生成方式 *</label>
+            <select id="tpl-type">
+              <option value="img2img">商品图加工</option>
+              <option value="txt2img">创意生图</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>适用品类 / 表单方案 *</label>
+            <select id="tpl-category">
+              <option value="apparel">服饰鞋靴</option>
+              <option value="bag">箱包配饰</option>
+              <option value="digital">3C 数码</option>
+              <option value="beauty">美妆日化</option>
+              <option value="other">其他</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>提示词模板内容 *</label>
+          <textarea id="tpl-content" rows="5" placeholder="可引用品类字段，如 {color} {bg}"></textarea>
+        </div>
+        <div class="field">
+          <label>默认负面限制描述</label>
+          <textarea id="tpl-negative" rows="2"></textarea>
+        </div>
+        <div class="notice">保存草稿后可再发布。仅「已发布」的模板提示词可在工作台被选用。再次发布将生成新版本号。</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" data-close="template-overlay" type="button">取消</button>
+        <button class="btn" id="btn-save-template-draft" type="button">保存草稿</button>
+        <button class="btn primary" id="btn-publish-template" type="button">发布</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quote picker -->
+  <div class="overlay" id="ref-overlay">
+    <div class="modal wide" role="dialog" aria-labelledby="ref-modal-title">
+      <div class="modal-head">
+        <h3 id="ref-modal-title">选择要引用的图片</h3>
+        <span class="spacer"></span>
+        <button class="btn ghost" data-close="ref-overlay" type="button">关闭</button>
+      </div>
+      <div class="modal-body">
+        <p class="help" style="margin:0">单击选用；双击可预览并左右切换多图。引用后说明如何修改。</p>
+        <div id="ref-picker-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Batch download current version drafts -->
+  <div class="overlay" id="batch-download-overlay">
+    <div class="modal" role="dialog" aria-labelledby="batch-download-title">
+      <div class="modal-head">
+        <h3 id="batch-download-title">批量下载</h3>
+        <span class="spacer"></span>
+        <button class="btn ghost" data-close="batch-download-overlay" type="button">关闭</button>
+      </div>
+      <div class="modal-body">
+        <p class="help" id="batch-download-hint" style="margin:0 0 10px">选择当前版本下要下载的图片，可多选。</p>
+        <div class="batch-download-grid" id="batch-download-body"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" id="btn-batch-select-all" type="button">全选</button>
+        <span class="spacer"></span>
+        <button class="btn ghost" data-close="batch-download-overlay" type="button">取消</button>
+        <button class="btn primary" id="btn-confirm-batch-download" type="button">下载所选</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Asset / detail lightbox：多图可左右键 / 按钮 / 滚轮 / 底栏横滑切换 -->
+  <div class="lightbox" id="lightbox" tabindex="-1" aria-modal="true" role="dialog">
+    <button class="btn close" id="btn-close-lightbox" type="button">关闭</button>
+    <button class="lightbox-nav prev" id="btn-lightbox-prev" type="button" aria-label="上一张" hidden>‹</button>
+    <button class="lightbox-nav next" id="btn-lightbox-next" type="button" aria-label="下一张" hidden>›</button>
+    <div class="lightbox-panel">
+      <div class="lightbox-stage" id="lightbox-stage">
+        <img id="lightbox-image" alt="素材预览" draggable="false" />
+      </div>
+      <div class="lightbox-filmstrip" id="lightbox-filmstrip" hidden></div>
+      <div class="lightbox-meta" id="lightbox-meta"></div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toast-wrap"></div>
+  <script type="module" src="app.js?v=20260802-assets-dedupe"></script>
+</body>
+</html>
