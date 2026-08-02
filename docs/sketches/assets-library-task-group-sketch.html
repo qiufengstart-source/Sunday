@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>草图 · 素材库：日期 → 任务收纳 + 一键导出</title>
+  <style>
+    :root {
+      --ink: #1f2937;
+      --mute: #6b7280;
+      --line: #9aa3b2;
+      --accent: #2563eb;
+      --soft: #f3f4f6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Hiragino Sans GB", sans-serif;
+      color: var(--ink);
+      background: #e8ecf1;
+      padding: 28px 24px 64px;
+    }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    .lead { color: var(--mute); font-size: 13px; margin: 0 0 16px; max-width: 920px; line-height: 1.55; }
+    .toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .toc a {
+      text-decoration: none; font-size: 12px; padding: 6px 12px; border-radius: 999px;
+      border: 1px solid #cbd5e1; background: #fff; color: var(--ink);
+    }
+    .grid-2 {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;
+    }
+    @media (max-width: 1100px) { .grid-2 { grid-template-columns: 1fr; } }
+    .card {
+      background: #fff; border: 1px solid #d7dde7; border-radius: 12px; padding: 14px;
+      scroll-margin-top: 12px;
+    }
+    .card h2 {
+      margin: 0 0 6px; font-size: 15px;
+      display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+    }
+    .tag {
+      font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+      border: 1px solid #93c5fd; color: #1d4ed8; background: #eff6ff;
+    }
+    .tag.alt { border-color: #6ee7b7; color: #065f46; background: #ecfdf5; }
+    .note { font-size: 12px; color: var(--mute); line-height: 1.5; margin: 0 0 10px; }
+    .frame {
+      border: 1.5px dashed var(--line); border-radius: 10px; overflow: hidden;
+      background: #fafafa; min-height: 460px;
+    }
+    .shell { display: grid; grid-template-columns: 56px 1fr; min-height: 460px; }
+    .rail {
+      background: #f8fafc; border-right: 1px solid #e5e7eb;
+      padding: 8px 5px; display: grid; gap: 6px; align-content: start;
+    }
+    .rail .dot {
+      aspect-ratio: 1; border-radius: 8px; background: #e5e7eb;
+      display: grid; place-items: center; font-size: 9px; color: var(--mute);
+    }
+    .rail .dot.on { background: #dbeafe; color: var(--accent); font-weight: 700; }
+    .main { display: grid; grid-template-rows: auto 1fr; }
+    .head {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 9px 11px; border-bottom: 1px solid #e5e7eb; background: #fff;
+    }
+    .head h3 { margin: 0; font-size: 13px; }
+    .chip {
+      font-size: 11px; padding: 2px 8px; border-radius: 999px;
+      background: #f1f5f9; color: var(--mute); border: 1px solid #e2e8f0;
+    }
+    .body { padding: 12px; background: #f8fafc; display: grid; gap: 14px; }
+    .day {
+      display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px;
+    }
+    .day strong { font-size: 13px; }
+    .day span { font-size: 11px; color: var(--mute); }
+
+    /* Task pack */
+    .task-pack {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .task-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: start;
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      background: #fff;
+    }
+    .task-head .name { font-size: 13px; font-weight: 700; }
+    .task-head .meta {
+      margin-top: 4px;
+      font-size: 11px; color: var(--mute);
+      display: flex; flex-wrap: wrap; gap: 6px 10px;
+    }
+    .pill {
+      font-size: 10px; padding: 1px 6px; border-radius: 999px;
+      background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
+    }
+    .pill.soft { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
+    .export-btn {
+      font-size: 11px; font-weight: 600;
+      padding: 7px 10px; border-radius: 8px;
+      border: 1px solid #93c5fd; background: #eff6ff; color: #1d4ed8;
+      white-space: nowrap;
+    }
+    .export-btn.ghost {
+      border-style: dashed; background: #fff; color: var(--mute); border-color: #cbd5e1;
+    }
+    .thumbs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 10px 12px 12px;
+    }
+    .thumb-wrap { position: relative; }
+    .thumb {
+      aspect-ratio: 3/4;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background: linear-gradient(135deg, #dbeafe, #fce7f3 50%, #fef3c7);
+    }
+    .thumb-wrap .t {
+      position: absolute; left: 4px; bottom: 4px;
+      font-size: 9px; padding: 1px 5px; border-radius: 999px;
+      background: rgba(15,23,42,.7); color: #fff;
+    }
+    .task-foot {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 0 12px 10px;
+      font-size: 11px; color: var(--mute);
+    }
+    .task-foot a { color: var(--accent); text-decoration: none; }
+
+    /* Compact row variant */
+    .task-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .task-row:last-child { border-bottom: 0; }
+    .strip {
+      display: flex; gap: 6px; margin-top: 6px;
+    }
+    .strip .thumb {
+      width: 48px; height: 48px; aspect-ratio: auto; border-radius: 6px;
+    }
+    .legend {
+      margin-top: 10px; font-size: 12px; color: var(--mute); line-height: 1.55;
+      padding: 10px 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e5e7eb;
+    }
+    .legend strong { color: var(--ink); }
+    .choose {
+      padding: 14px 16px; background: #fff; border: 1px solid #d7dde7; border-radius: 12px;
+    }
+    .choose h2 { margin: 0 0 8px; font-size: 15px; }
+    .choose ol { margin: 0; padding-left: 18px; color: var(--mute); font-size: 13px; line-height: 1.65; }
+    .tree {
+      font-size: 12px; line-height: 1.7; color: var(--mute);
+      background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px;
+      padding: 10px 12px; margin: 0 0 16px;
+    }
+    .tree code { color: var(--ink); }
+  </style>
+</head>
+<body>
+  <h1>素材库增补：按任务收纳 + 一键导出</h1>
+  <p class="lead">
+    同一日期下，一个生图任务可能收藏多张图。建议层级为：
+    <strong>日期 → 任务包 → 多张素材</strong>。任务包提供「一键导出」打包当日该任务下全部收藏图。
+  </p>
+
+  <div class="tree">
+    <strong style="color:#1f2937">信息架构</strong><br />
+    <code>店铺项目</code><br />
+    └ <code>日期（2026-08-02）</code><br />
+    &nbsp;&nbsp;├ <code>任务包「香氛主图优化」</code> → 类型 / 生图人 / 张数 / <strong>一键导出</strong><br />
+    &nbsp;&nbsp;│&nbsp;&nbsp;├ 图1 · 11:58<br />
+    &nbsp;&nbsp;│&nbsp;&nbsp;├ 图2 · 11:42<br />
+    &nbsp;&nbsp;│&nbsp;&nbsp;└ 图3 · 10:15<br />
+    &nbsp;&nbsp;└ <code>任务包「节日活动氛围」</code> → … / 一键导出
+  </div>
+
+  <div class="toc">
+    <a href="#pack-a">任务包 · 展开缩略图（推荐）</a>
+    <a href="#pack-b">任务包 · 紧凑条带</a>
+    <a href="#export">导出约定</a>
+  </div>
+
+  <div class="grid-2">
+    <section class="card" id="pack-a">
+      <h2>任务包展示 · 展开型 <span class="tag">推荐</span></h2>
+      <p class="note">日期下每个任务一张「包」卡片：头部是任务信息 + 一键导出，下方平铺该任务当日收藏的全部缩略图。</p>
+      <div class="frame">
+        <div class="shell">
+          <aside class="rail"><div class="dot">…</div><div class="dot on">库</div></aside>
+          <div class="main">
+            <div class="head">
+              <h3>项目素材库</h3>
+              <span class="chip">北美香氛店</span>
+            </div>
+            <div class="body">
+              <div>
+                <div class="day"><strong>今天 · 2026-08-02</strong><span>2 个任务 · 5 张图</span></div>
+
+                <div class="task-pack" style="margin-bottom:10px">
+                  <div class="task-head">
+                    <div>
+                      <div class="name">香氛主图优化</div>
+                      <div class="meta">
+                        <span class="pill">商品图加工</span>
+                        <span class="pill soft">生图人 Cecilia</span>
+                        <span class="pill soft">本日收藏 3 张</span>
+                        <span class="pill soft">最近 11:58</span>
+                      </div>
+                    </div>
+                    <button class="export-btn" type="button">一键导出本任务</button>
+                  </div>
+                  <div class="thumbs">
+                    <div class="thumb-wrap"><div class="thumb"></div><span class="t">11:58</span></div>
+                    <div class="thumb-wrap"><div class="thumb" style="background:linear-gradient(160deg,#e2e8f0,#bfdbfe)"></div><span class="t">11:42</span></div>
+                    <div class="thumb-wrap"><div class="thumb" style="background:linear-gradient(160deg,#ddd6fe,#fae8ff)"></div><span class="t">09:40</span></div>
+                  </div>
+                  <div class="task-foot">
+                    <a href="#">打开来源任务</a>
+                    <span>·</span>
+                    <span>也可单击单张下载 / 预览</span>
+                  </div>
+                </div>
+
+                <div class="task-pack">
+                  <div class="task-head">
+                    <div>
+                      <div class="name">节日活动氛围</div>
+                      <div class="meta">
+                        <span class="pill">创意生图</span>
+                        <span class="pill soft">生图人 Cecilia</span>
+                        <span class="pill soft">本日收藏 2 张</span>
+                        <span class="pill soft">最近 10:15</span>
+                      </div>
+                    </div>
+                    <button class="export-btn" type="button">一键导出本任务</button>
+                  </div>
+                  <div class="thumbs">
+                    <div class="thumb-wrap"><div class="thumb" style="background:linear-gradient(160deg,#fde68a,#fce7f3)"></div><span class="t">10:15</span></div>
+                    <div class="thumb-wrap"><div class="thumb" style="background:linear-gradient(160deg,#bbf7d0,#dbeafe)"></div><span class="t">10:08</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <strong>优点：</strong>一眼看到「这个任务今天出了哪些图」；导出动作挂在任务级，不易点错单张。<br />
+        可与 B1/B3 日期导航组合：切到某天后，内容按任务包排列。
+      </div>
+    </section>
+
+    <section class="card" id="pack-b">
+      <h2>任务包展示 · 紧凑型 <span class="tag alt">备选</span></h2>
+      <p class="note">任务占一行：左侧信息 + 缩略图条，右侧导出。适合任务很多、想先扫目录再点开的场景。</p>
+      <div class="frame">
+        <div class="shell">
+          <aside class="rail"><div class="dot">…</div><div class="dot on">库</div></aside>
+          <div class="main">
+            <div class="head">
+              <h3>项目素材库</h3>
+              <span class="chip">北美香氛店</span>
+            </div>
+            <div class="body">
+              <div>
+                <div class="day"><strong>今天 · 2026-08-02</strong><span>2 个任务 · 5 张图</span></div>
+                <div class="task-pack">
+                  <div class="task-row">
+                    <div>
+                      <div class="name" style="font-size:13px;font-weight:700">香氛主图优化</div>
+                      <div class="meta" style="margin-top:4px;font-size:11px;color:var(--mute);display:flex;gap:8px;flex-wrap:wrap">
+                        <span class="pill">商品图加工</span>
+                        <span>Cecilia</span>
+                        <span>3 张</span>
+                      </div>
+                      <div class="strip">
+                        <div class="thumb"></div>
+                        <div class="thumb" style="background:linear-gradient(160deg,#e2e8f0,#bfdbfe)"></div>
+                        <div class="thumb" style="background:linear-gradient(160deg,#ddd6fe,#fae8ff)"></div>
+                      </div>
+                    </div>
+                    <button class="export-btn" type="button">一键导出</button>
+                  </div>
+                  <div class="task-row">
+                    <div>
+                      <div class="name" style="font-size:13px;font-weight:700">节日活动氛围</div>
+                      <div class="meta" style="margin-top:4px;font-size:11px;color:var(--mute);display:flex;gap:8px;flex-wrap:wrap">
+                        <span class="pill">创意生图</span>
+                        <span>Cecilia</span>
+                        <span>2 张</span>
+                      </div>
+                      <div class="strip">
+                        <div class="thumb" style="background:linear-gradient(160deg,#fde68a,#fce7f3)"></div>
+                        <div class="thumb" style="background:linear-gradient(160deg,#bbf7d0,#dbeafe)"></div>
+                      </div>
+                    </div>
+                    <button class="export-btn ghost" type="button">一键导出</button>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="day"><strong>昨天 · 2026-08-01</strong><span>1 个任务 · 2 张图</span></div>
+                <div class="task-pack">
+                  <div class="task-row">
+                    <div>
+                      <div class="name" style="font-size:13px;font-weight:700">箱包上新</div>
+                      <div class="meta" style="margin-top:4px;font-size:11px;color:var(--mute);display:flex;gap:8px;flex-wrap:wrap">
+                        <span class="pill">商品图加工</span>
+                        <span>Alex</span>
+                        <span>2 张</span>
+                      </div>
+                      <div class="strip">
+                        <div class="thumb" style="background:linear-gradient(160deg,#bbf7d0,#dbeafe)"></div>
+                        <div class="thumb" style="background:linear-gradient(160deg,#ddd6fe,#fae8ff)"></div>
+                      </div>
+                    </div>
+                    <button class="export-btn ghost" type="button">一键导出</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <strong>优点：</strong>一屏容纳更多任务；缩略图作预览条，点击任务可再展开大图（可选）。
+      </div>
+    </section>
+  </div>
+
+  <section class="card" id="export">
+    <h2>一键导出约定（建议）</h2>
+    <div class="legend" style="margin-top:0">
+      <strong>导出范围：</strong>当前日期分区下、该任务已收藏到素材库的全部图片（不是任务历史里未收藏的草稿）。<br />
+      <strong>打包方式：</strong>浏览器下载一个 ZIP，例如
+      <code>北美香氛店_香氛主图优化_20260802.zip</code>。<br />
+      <strong>包内命名：</strong><code>01_1158_V3.png</code> / <code>02_1142_V2.png</code>（序号 + 时间 + 版本）。<br />
+      <strong>可选增强：</strong>包内附 <code>meta.txt</code>（任务名、类型、生图人、提示词摘要）；日期级「导出当日全部任务」次要入口。
+    </div>
+  </section>
+
+  <section class="choose" style="margin-top:16px">
+    <h2>请确认</h2>
+    <ol>
+      <li>层级是否定为：<strong>日期 → 任务包 → 多图</strong>？</li>
+      <li>任务包外观更倾向 <strong>展开型</strong> 还是 <strong>紧凑型</strong>？</li>
+      <li>一键导出是否只要 ZIP 图片，还是需要附带 meta 文本？</li>
+    </ol>
+    <p class="note" style="margin:10px 0 0">
+      也可直接回复例如：<strong>「展开型 + ZIP（含 meta）+ 叠在 B3 上」</strong>。
+    </p>
+  </section>
+</body>
+</html>
